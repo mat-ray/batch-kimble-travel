@@ -1,5 +1,5 @@
 # batch-kimble-travel
-Little app that can take values populated in a cvs and use them to create a travel request in Kimble Salesforce
+Little app that can take values populated in a .csv files and use them to create a travel request in Kimble Salesforce
 -- Open Kimble in Safari (assumes you are logged in)
 -- How this works...
 -- Use the csv template to enter the details of the travel you wish to request in Kimble
