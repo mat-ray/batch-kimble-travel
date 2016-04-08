@@ -1,0 +1,4 @@
+mainTraveller,travelSummary,fromDate,toDate,activity,reason,flightBaggage,flightNeed,hotelNeed,trainNeed
+Johnny Appleseed,Trip to meet important client,23/03/2016,25/03/2016,Dept - General,This is my reason,TRUE,TRUE,FALSE,FALSE
+Johnny Appleseed,Trip to meet another important client,27/03/2016,29/03/2016,Dept - Stuff,This is NOT my reason,FALSE,TRUE,TRUE,FALSE
+Johnny Appleseed,Trip to meet another important client BB,27/03/2016,29/03/2016,Dept - Other,This is still NOT my reason,TRUE,TRUE,TRUE,TRUE
