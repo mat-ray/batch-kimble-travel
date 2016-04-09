@@ -1,4 +1,2 @@
-mainTraveller,travelSummary,fromDate,toDate,activity,reason,flightBaggage,flightNeed,hotelNeed,trainNeed
-Johnny Appleseed,Trip to meet important client,23/03/2016,25/03/2016,Dept - General,This is my reason,TRUE,TRUE,FALSE,FALSE
-Johnny Appleseed,Trip to meet another important client,27/03/2016,29/03/2016,Dept - Stuff,This is NOT my reason,FALSE,TRUE,TRUE,FALSE
-Johnny Appleseed,Trip to meet another important client BB,27/03/2016,29/03/2016,Dept - Other,This is still NOT my reason,TRUE,TRUE,TRUE,TRUE
+mainTraveller,travelSummary,fromDate,toDate,activity,reason,flightBaggage,flightNeed,hotelNeed,trainNeed,taxiNeed,carNeed,OTNeed,returnFlight,depAirport,destAirport,retAirport,depTime,retTime,airNotes,hotelPref,hotelNotes,returnTrain,depStation,destStation,depTrainTime,retTrainTime,trainNotes
+Johnny Appleseed,Trip to meet important client,23/03/2016,25/03/2016,Gov - Bench,This is my reason,FALSE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,LBA - Leeds-Bradford,STN - London Stansted,EMA - East Midlands,16.00,21.00,Please get me on the following flights - BA1414 OUT and BA 1419 return,Marriott Portsmouth,I'd like breakfast please as well as a gym.,TRUE,Kingston,Liverpool,08.00,15.30,Quiet carriage please
