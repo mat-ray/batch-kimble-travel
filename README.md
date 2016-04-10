@@ -1,7 +1,7 @@
 # batch-kimble-travel
 Little app that can take values populated in a .csv files and use them to create a travel request in Kimble Salesforce. 
 
-For Apple Map only.
+For Apple Mac only.
 
 **Prerequisites**
 
