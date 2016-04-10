@@ -1,7 +1,7 @@
 -- Open Kimble in Safari (assumes you are logged in)
 -- How this works...
 -- Use the csv template to enter the details of the travel you wish to request in Kimble
--- Do NOT muck around with the headings, and don't use any commas. Make sure you save it as a csv, NOT xlsx.  
+-- Do NOT muck around with the headings, and don't use any pipes. Make sure you save it as a csv, NOT xlsx.  You can use commas now!
 -- Also, when entering addresses (or anything else), don't use any soft returns in the fields in Excel (ALT+RETURN) as this breaks it.
 -- Save that file (don't rename it) in the same folder that this app will live in.  It expects it to be co-located.
 
@@ -19,7 +19,7 @@ set csvText to read batchPath
 set the csvText to replaceText(csvText, "'", «data utxt02BC» as Unicode text)
 
 -- Pass the read-in csv file into the excellent csvToList script that turns it into a proper Apple script list - from http://macscripter.net/viewtopic.php?pid=125444#p125444
-set listOfRequests to csvToList(csvText, {separator:","}, {trimming:true})
+set listOfRequests to csvToList(csvText, {separator:"|"}, {trimming:true})
 log (count of listOfRequests)
 
 -- Check how many rows & columns the csv file has.  No upper limit to rows (expects at least 2), but columns/fields need to be fixed.
