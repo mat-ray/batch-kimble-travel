@@ -9,6 +9,7 @@ For Apple Mac only.
 * You need to copy the source into Apple Script Editor and save as a script file - save anywhere but put the script in the same folder as the csv and it will all work.
 * To access the Apple Script Editor, use the Script Editor application.
 * Assumes a single set of dates - out and return
+* Assumes you allow JavaScript to run in Safari
 
 **How this works**
 
