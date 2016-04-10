@@ -2,6 +2,7 @@
 -- How this works...
 -- Use the csv template to enter the details of the travel you wish to request in Kimble
 -- Do NOT muck around with the headings, and don't use any commas. Make sure you save it as a csv, NOT xlsx.  
+-- Also, when entering addresses (or anything else), don't use any soft returns in the fields in Excel (ALT+RETURN) as this breaks it.
 -- Save that file (don't rename it) in the same folder that this app will live in.  It expects it to be co-located.
 
 
@@ -17,22 +18,24 @@ set csvText to read batchPath
 -- replace any apostrophes that were put into the csv, otherwise all hell will break loose.
 set the csvText to replaceText(csvText, "'", «data utxt02BC» as Unicode text)
 
+-- Pass the read-in csv file into the excellent csvToList script that turns it into a proper Apple script list - from http://macscripter.net/viewtopic.php?pid=125444#p125444
 set listOfRequests to csvToList(csvText, {separator:","}, {trimming:true})
 log (count of listOfRequests)
 
-
+-- Check how many rows & columns the csv file has.  No upper limit to rows (expects at least 2), but columns/fields need to be fixed.
 set numberOfCols to count of (item 1 of listOfRequests)
-if numberOfCols is not equal to 28 then error "Oh dear. It looks like you've done something iffy to the csv file!!" -- I TOLD YOU NOT TO ADD ANY COLUMNS!!
+if numberOfCols is not equal to 36 then error "Oh dear. It looks like you've done something iffy to the csv file!!" -- I TOLD YOU NOT TO ADD ANY COLUMNS!!
 set requestHeaders to item 1 of listOfRequests
 set listOfRequestsNoHeads to items 2 thru -1 of listOfRequests
 set numberOfRequests to count of listOfRequestsNoHeads
 
 
-log "numberOfRequests - " & numberOfRequests
-log "numberOfCols - " & numberOfCols
+--log "numberOfRequests - " & numberOfRequests
+--log "numberOfCols - " & numberOfCols
 
-
+-- Loop through the rows from the csv, omitting the header row.
 repeat with theRequest in listOfRequestsNoHeads
+	-- Allocate the read in values from the csv to variables.  Probably could have skipped this and just used 'item x' etc directly, but this is easier to read.
 	set mainTraveller to item 1 of theRequest
 	if mainTraveller is "" then return -- if people edit the csv with Excel, it has a habit of adding a row of ,,,,,,,,, if you ever delete a row out
 	set travelSummary to item 2 of theRequest
@@ -62,45 +65,57 @@ repeat with theRequest in listOfRequestsNoHeads
 	set depTrainTime to item 26 of theRequest
 	set retTrainTime to item 27 of theRequest
 	set trainNotes to item 28 of theRequest
+	set depAddress to item 29 of theRequest
+	set destAddress to item 30 of theRequest
+	set taxiNotes to item 31 of theRequest
+	set depTimeTaxi to item 32 of theRequest
+	set carPickupLocation to item 33 of theRequest
+	set carDropoffLocation to item 34 of theRequest
+	set carNotes to item 35 of theRequest
+	set nameOfOtherTraveller to item 36 of theRequest
 	
 	
 	
-	
-	
-	tell application "Safari" -- because let's face it, this is hardly going to be robust now, is it?
-		try
+	tell application "Safari"
+		try -- because let's face it, this is hardly going to be robust now, is it?
 			tell window 1
 				activate
+				-- Make a new tab in Safari
 				set current tab to (make new tab with properties {URL:"https://eu1.salesforce.com/a32/o"})
 			end tell
-			
+			-- These delays are necessary, to allow Safari to keep up
 			delay 3
-			--	DatePicker.datePicker.selectDate(this);
+			--	Click the 'New' button to create a new travel request
 			do JavaScript "document.forms['hotlist']['new'].click()" in document 1
 			delay 3
-			do JavaScript "document.forms['j_id0:j_id1:TheForm']['j_id0:j_id1:TheForm:j_id104:j_id108:j_id109:j_id112'].value = '" & mainTraveller & "'" in document 1
-			--	do JavaScript "document.forms['j_id0:j_id1:TheForm'][''].value = '" & mainTraveller & "'" in document 1
-			do JavaScript "document.forms['j_id0:j_id1:TheForm']['j_id0:j_id1:TheForm:j_id104:j_id108:j_id117:j_id119'].value = '" & travelSummary & "'" in document 1
 			
+			-- Add main traveller name
+			do JavaScript "document.forms['j_id0:j_id1:TheForm']['j_id0:j_id1:TheForm:j_id104:j_id108:j_id109:j_id112'].value = '" & mainTraveller & "'" in document 1
+			--	Add travel summary
+			do JavaScript "document.forms['j_id0:j_id1:TheForm']['j_id0:j_id1:TheForm:j_id104:j_id108:j_id117:j_id119'].value = '" & travelSummary & "'" in document 1
+			-- Add in the 'from' and 'to' dates
 			do JavaScript "DatePicker.insertDate('" & fromDate & "', 'j_id0:j_id1:TheForm:j_id104:j_id108:j_id120:j_id123',true);" in document 1
 			do JavaScript "DatePicker.insertDate('" & toDate & "', 'j_id0:j_id1:TheForm:j_id104:j_id108:j_id125:j_id128',false);" in document 1
 			
 			delay 3
 			
-			-- Handling text selectors!
+			-- Handling text selectors!  Choose the appropriate value for the 'activity'
 			set theElement to "document.forms['j_id0:j_id1:TheForm']['j_id0:j_id1:TheForm:j_id104:j_id108:j_id130:ActivityList']"
 			set textToFind to activity
 			do JavaScript "var objSelect = " & theElement & ";setSelectedValue(objSelect, '" & textToFind & "');
 function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj.options.length; i++) { if (selectObj.options[i].text== valueToSet) { selectObj.options[i].selected = true; return; } }}" in document 1
 			
-			
-			
-			--do JavaScript "document.forms['j_id0:j_id1:TheForm']['j_id0:j_id1:TheForm:j_id104:j_id108:j_id130:ActivityList'].selectedIndex = '5';" in document 1
+			--Add reason for travel
 			do JavaScript "document.forms['j_id0:j_id1:TheForm']['j_id0:j_id1:TheForm:j_id104:j_id108:j_id138:j_id140'].value = '" & reason & "';" in document 1
+			
+			-- Tick the baggage box if needed
 			if flightBaggage is true then
 				do JavaScript "document.forms['j_id0:j_id1:TheForm']['j_id0:j_id1:TheForm:j_id104:j_id141:j_id142:0:j_id143'].checked = true;" in document 1
 			end if
-			-- addRequisitionItem('Flight')  addRequisitionItem('Hotel')  addRequisitionItem('Train')
+			
+			
+			
+			-- Next section adds in the main sub-sections of the form - flights, hotels, trains, taxi, car hire and another traveller.
 			
 			-- Flights! FLIGHTS! FLIGHTS!!!
 			if flightNeed then
@@ -213,7 +228,6 @@ function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj
 					-- Only execute if we need a return leg
 				else
 					
-					
 					-- set the return date to the toDate!!
 					set theElement to "j_id0:j_id1:TheForm:j_id104:j_id221:0:j_id254"
 					do JavaScript "DatePicker.insertDate('" & toDate & "', '" & theElement & "',false);" in document 1
@@ -231,22 +245,61 @@ function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj
 			end if
 			
 			
-			-- Taxi! TAXI! TAXI!!!   
+			-- Taxi! TAXI! TAXI!!!   depAddress	destAddress	taxiNotes	depTimeTaxi
 			if taxiNeed then
 				do JavaScript "addRequisitionItem('Taxi')" in document 1
 				delay 2
+				
+				-- Departure address
+				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id268:0:j_id281"
+				do JavaScript "document.getElementById('" & theElement & "').value='" & depAddress & "';" in document 1
+				
+				-- Destination address
+				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id268:0:j_id292"
+				do JavaScript "document.getElementById('" & theElement & "').value='" & destAddress & "';" in document 1
+				
+				-- Requisition notes
+				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id268:0:j_id297"
+				do JavaScript "document.getElementById('" & theElement & "').value='" & taxiNotes & "';" in document 1
+				
+				-- Departure time
+				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id268:0:j_id287"
+				do JavaScript "document.getElementById('" & theElement & "').value='" & depTimeTaxi & "';" in document 1
+				
 			end if
 			
-			-- Car! CAR! CAR!!!   
+			-- Car! CAR! CAR!!!   carPickupLocation	carDropoffLocation	carNotes
 			if carNeed then
 				do JavaScript "addRequisitionItem('CarHire')" in document 1
 				delay 2
+				
+				-- set car pickup
+				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id302:0:j_id315"
+				do JavaScript "document.getElementById('" & theElement & "').value='" & carPickupLocation & "';" in document 1
+				
+				-- set car dropoff
+				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id302:0:j_id323"
+				do JavaScript "document.getElementById('" & theElement & "').value='" & carDropoffLocation & "';" in document 1
+				
+				-- set car dropoff date (use common toDate)
+				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id302:0:j_id326"
+				do JavaScript "document.getElementById('" & theElement & "').value='" & toDate & "';" in document 1
+				
+				-- set car requisition notes
+				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id302:0:j_id331"
+				do JavaScript "document.getElementById('" & theElement & "').value='" & carNotes & "';" in document 1
+				
+				
 			end if
 			
-			-- Other traveller!
+			-- Other traveller!   nameOfOtherTraveller
 			if OTNeed then
 				do JavaScript "addTraveller()" in document 1
 				delay 2
+				
+				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id335:0:j_id341"
+				do JavaScript "document.getElementById('" & theElement & "').value='" & nameOfOtherTraveller & "';" in document 1
+				
 			end if
 			
 			
@@ -260,12 +313,18 @@ function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj
 	delay 3
 end repeat
 
+-- Tell the user that we have finished now.
+
+display notification "All your Kimble Travel requests have been created. Please check them carefully and then submit them all - before you get timed out!" with title "All Done." sound name "Glass"
+say "Your Travel requests have been created."
+
+
 set csvText to null
 set listOfRequests to null
 
 return
 
-
+-- Handy routine to find/replace text in a string, 'coz AppleScript doesn't have a thing for this.
 on replaceText(this_text, search_string, replacement_string)
 	set AppleScript's text item delimiters to the search_string
 	set the item_list to every text item of this_text
