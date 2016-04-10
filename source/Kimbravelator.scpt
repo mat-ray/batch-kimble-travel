@@ -7,7 +7,7 @@
 
 
 tell application "Finder" to set containerFolder to POSIX path of (container of (path to me) as alias)
-set csv to "kimble-travel-batch.csv"
+set csv to "Kimbravelator-input.csv"
 log "Importing - " & (containerFolder & csv) as POSIX file
 
 set batchPath to (containerFolder & csv) as POSIX file
