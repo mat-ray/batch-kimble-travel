@@ -18,6 +18,9 @@ For Apple Mac only.
 3. Save that file (**don't rename it**) in the same folder that this app will live in.  It expects it to be co-located. Not planning on making this particularly robust, so use with caution.  No intention to set these to auto-submit.
 4. Don't use any soft-returns (ALT+RETURN) in fields if you edit the csv using Excel. This causes the script to think there is a new row.
 5. Acquaint yourself with the Kimble form.  If you provide a value for a DROPDOWN (like the Activity one), you need to make sure you provide the exact text - exactly as it appears in the dropdown - into the csv file.
+ 
+I've added a source folder, and also an attemot at re-creating the application bundle structure that Apple Script Editor builds for you if you open the script and choose to save it as an applicatiion.
+
 
 List of values for airports:
 
