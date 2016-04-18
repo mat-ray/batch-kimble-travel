@@ -3,17 +3,17 @@
 -- Use the csv template to enter the details of the travel you wish to request in Kimble
 -- Do NOT muck around with the headings, and don't use any commas. Make sure you save it as a csv, NOT xlsx.  
 -- Also, when entering addresses (or anything else), don't use any soft returns in the fields in Excel (ALT+RETURN) as this breaks it.
--- Save that file (don't rename it) in the same folder that this app will live in.  It expects it to be co-located.
+-- Save that file - give it a name & location of your choosing as this version now supports a file selector to allow you to create a bunch of variant csv files.
 
 
 tell application "Finder" to set containerFolder to POSIX path of (container of (path to me) as alias)
-set csv to "Kimbravelator-input.csv"
-log "Importing - " & (containerFolder & csv) as POSIX file
 
-set batchPath to (containerFolder & csv) as POSIX file
+--set csv to containerFolder & "Kimbravelator-input.csv"
+
+set csv to choose file with prompt "Please choose your input file: " of type {"csv"} default location containerFolder
 
 -- Read in the csv file
-set csvText to read batchPath
+set csvText to read csv
 
 -- replace any apostrophes that were put into the csv, otherwise all hell will break loose.
 set the csvText to replaceText(csvText, "'", «data utxt02BC» as Unicode text)
@@ -305,7 +305,7 @@ function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj
 			
 			
 		on error
-			display dialog "Ooops.  Couldn't activate the Safari window.  Make sure you have just one open. Close any Safari developer windows."
+			display notification "Ooops.  Couldn't activate the Safari window.  Make sure you have just one open. Close any Safari developer windows." with title "Ooops!" sound name "Glass"
 			
 		end try
 		
