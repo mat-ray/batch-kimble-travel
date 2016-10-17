@@ -3,21 +3,18 @@
 -- Use the csv template to enter the details of the travel you wish to request in Kimble
 -- Do NOT muck around with the headings, and don't use any commas. Make sure you save it as a csv, NOT xlsx.  
 -- Also, when entering addresses (or anything else), don't use any soft returns in the fields in Excel (ALT+RETURN) as this breaks it.
--- Save that file - give it a name & location of your choosing as this version now supports a file selector to allow you to create a bunch of variant csv files.
--- Added a conditional to check where the app is stored.  If it is in Applications folder, default file chooser to Documents folder.  Otherwise, default to same folder as the app location.
+-- Save that file (don't rename it) in the same folder that this app will live in.  It expects it to be co-located.
+
 
 tell application "Finder" to set containerFolder to POSIX path of (container of (path to me) as alias)
+set csv to "Kimbravelator-input.csv"
+log "Importing - " & (containerFolder & csv) as POSIX file
 
--- if the app is in the Applications folder, default the location to 'My Documents'
-log (POSIX path of (path to applications folder))
-if containerFolder is equal to (POSIX path of (path to applications folder)) then
-	set containerFolder to POSIX path of (path to documents folder)
-end if
 
-set csv to choose file with prompt "Please choose your input file: " of type {"csv"} default location containerFolder
+set batchPath to (containerFolder & csv) as POSIX file
 
 -- Read in the csv file
-set csvText to read csv
+set csvText to read batchPath
 
 -- replace any apostrophes that were put into the csv, otherwise all hell will break loose.
 set the csvText to replaceText(csvText, "'", «data utxt02BC» as Unicode text)
@@ -26,16 +23,14 @@ set the csvText to replaceText(csvText, "'", «data utxt02BC» as Unicode text)
 set listOfRequests to csvToList(csvText, {separator:","}, {trimming:true})
 log (count of listOfRequests)
 
+
 -- Check how many rows & columns the csv file has.  No upper limit to rows (expects at least 2), but columns/fields need to be fixed.
 set numberOfCols to count of (item 1 of listOfRequests)
-if numberOfCols is not equal to 36 then error "Oh dear. It looks like you've done something iffy to the csv file!!" -- I TOLD YOU NOT TO ADD ANY COLUMNS!!
+if numberOfCols is not equal to 38 then error "Oh dear. It looks like you've done something iffy to the csv file!!" -- I TOLD YOU NOT TO ADD ANY COLUMNS!!
 set requestHeaders to item 1 of listOfRequests
 set listOfRequestsNoHeads to items 2 thru -1 of listOfRequests
 set numberOfRequests to count of listOfRequestsNoHeads
 
-
---log "numberOfRequests - " & numberOfRequests
---log "numberOfCols - " & numberOfCols
 
 -- Loop through the rows from the csv, omitting the header row.
 repeat with theRequest in listOfRequestsNoHeads
@@ -73,11 +68,27 @@ repeat with theRequest in listOfRequestsNoHeads
 	set destAddress to item 30 of theRequest
 	set taxiNotes to item 31 of theRequest
 	set depTimeTaxi to item 32 of theRequest
-	set carPickupLocation to item 33 of theRequest
-	set carDropoffLocation to item 34 of theRequest
-	set carNotes to item 35 of theRequest
-	set nameOfOtherTraveller to item 36 of theRequest
+	set carPickUpAddress to item 33 of theRequest
+	set carDropAddress to item 34 of theRequest
+	set carDropTime to item 35 of theRequest
+	set carPickUpTime to item 36 of theRequest
+	set carNotes to item 37 of theRequest
+	set nameOfOtherTraveller to item 38 of theRequest
 	
+	
+	
+	
+	-- Now get all the field names.  Externalised because this makes it a little easier to maintain
+	--set csvFields to "Kimbravelator-fields.csv"
+	--set fieldsPath to (containerFolder & csvFields) as POSIX file
+	--set csvFieldsText to read fieldsPath
+	--set formFieldsText to replaceText(csvFieldsText, "'", «data utxt02BC» as Unicode text)
+	--set listOfFields to csvToList(formFieldsText, {separator:","}, {trimming:true})
+	
+	--	log listOfFields
+	
+	-- Create a dictionary list of key-value records for all the form fields.  Makes it a little easier to update when Kimble goes and renames them all.
+	set theFormFields to {theFormName:"j_id0:j_id1:TheForm", mainTravellerField:"j_id0:j_id1:TheForm:j_id80:j_id84:j_id85:j_id88", travelSummaryField:"j_id0:j_id1:TheForm:j_id80:j_id84:j_id93:j_id95", fromDateField:"j_id0:j_id1:TheForm:j_id80:j_id84:j_id96:j_id99", toDateField:"j_id0:j_id1:TheForm:j_id80:j_id84:j_id101:j_id104", activityListField:"j_id0:j_id1:TheForm:j_id80:j_id84:j_id106:ActivityList", reasonField:"j_id0:j_id1:TheForm:j_id80:j_id84:j_id114:j_id116", flightBaggageField:"j_id0:j_id1:TheForm:j_id80:j_id117:j_id118:0:j_id119", depAirportField:"j_id0:j_id1:TheForm:j_id80:j_id126:0:j_id146", destAirportField:"j_id0:j_id1:TheForm:j_id80:j_id126:0:j_id148", departureDateField:"j_id0:j_id1:TheForm:j_id80:j_id126:0:j_id150", departureTimeField:"j_id0:j_id1:TheForm:j_id80:j_id126:0:j_id152", retAirportField:"j_id0:j_id1:TheForm:j_id80:j_id126:0:j_id157", returnFlightBoolField:"j_id0:j_id1:TheForm:j_id80:j_id126:0:j_id140", returnDateField:"j_id0:j_id1:TheForm:j_id80:j_id126:0:j_id159", returnTimeField:"j_id0:j_id1:TheForm:j_id80:j_id126:0:j_id161", reqNotesField:"j_id0:j_id1:TheForm:j_id80:j_id126:0:j_id165", hotelCheckinField:"j_id0:j_id1:TheForm:j_id80:j_id170:0:j_id183", hotelCheckoutField:"j_id0:j_id1:TheForm:j_id80:j_id170:0:j_id186", hotelPrefField:"j_id0:j_id1:TheForm:j_id80:j_id170:0:j_id189", hotelReqNotesField:"j_id0:j_id1:TheForm:j_id80:j_id170:0:j_id192", returnTrainBoolField:"j_id0:j_id1:TheForm:j_id80:j_id197:0:j_id211", depTrainStationField:"j_id0:j_id1:TheForm:j_id80:j_id197:0:j_id217", depTrainDateField:"j_id0:j_id1:TheForm:j_id80:j_id197:0:j_id219", depTrainTimeField:"j_id0:j_id1:TheForm:j_id80:j_id197:0:j_id221", retTrainStationField:"j_id0:j_id1:TheForm:j_id80:j_id197:0:j_id226", retTrainDateField:"j_id0:j_id1:TheForm:j_id80:j_id197:0:j_id230", retTrainTimeField:"j_id0:j_id1:TheForm:j_id80:j_id197:0:j_id234", trainReqNotesField:"j_id0:j_id1:TheForm:j_id80:j_id197:0:j_id239", taxiDepAddressField:"j_id0:j_id1:TheForm:j_id80:j_id244:0:j_id257", taxiDepDateField:"j_id0:j_id1:TheForm:j_id80:j_id244:0:j_id260", taxiDepTimeField:"j_id0:j_id1:TheForm:j_id80:j_id244:0:j_id263", taxiReqNotesField:"j_id0:j_id1:TheForm:j_id80:j_id244:0:j_id273", taxiDestAddressField:"j_id0:j_id1:TheForm:j_id80:j_id244:0:j_id268", carPickUpAddressField:"j_id0:j_id1:TheForm:j_id80:j_id278:0:j_id291", carPickUpDateField:"j_id0:j_id1:TheForm:j_id80:j_id278:0:j_id294", carPickUpTimeField:"j_id0:j_id1:TheForm:j_id80:j_id278:0:j_id297", carDropAddressField:"j_id0:j_id1:TheForm:j_id80:j_id278:0:j_id302", carDropDateField:"j_id0:j_id1:TheForm:j_id80:j_id278:0:j_id305", carDropTimeField:"j_id0:j_id1:TheForm:j_id80:j_id278:0:j_id308", carNotesField:"j_id0:j_id1:TheForm:j_id80:j_id278:0:j_id313", otherTravellerField:"j_id0:j_id1:TheForm:j_id80:j_id317:0:j_id323"}
 	
 	
 	tell application "Safari"
@@ -90,34 +101,47 @@ repeat with theRequest in listOfRequestsNoHeads
 			-- These delays are necessary, to allow Safari to keep up
 			delay 3
 			--	Click the 'New' button to create a new travel request
+			--do JavaScript "navigateToUrl('/a32/e?retURL=%2Fa32%2Fo',null,'new');" in document 1
 			do JavaScript "document.forms['hotlist']['new'].click()" in document 1
 			delay 3
 			
 			-- Add main traveller name
-			do JavaScript "document.forms['j_id0:j_id1:TheForm']['j_id0:j_id1:TheForm:j_id104:j_id108:j_id109:j_id112'].value = '" & mainTraveller & "'" in document 1
+			do JavaScript "document.forms['" & theFormName of theFormFields & "']['" & mainTravellerField of theFormFields & "'].value = '" & mainTraveller & "'" in document 1
+			
 			--	Add travel summary
-			do JavaScript "document.forms['j_id0:j_id1:TheForm']['j_id0:j_id1:TheForm:j_id104:j_id108:j_id117:j_id119'].value = '" & travelSummary & "'" in document 1
+			do JavaScript "document.forms['" & theFormName of theFormFields & "']['" & travelSummaryField of theFormFields & "'].value = '" & travelSummary & "'" in document 1
 			-- Add in the 'from' and 'to' dates
-			do JavaScript "DatePicker.insertDate('" & fromDate & "', 'j_id0:j_id1:TheForm:j_id104:j_id108:j_id120:j_id123',true);" in document 1
-			do JavaScript "DatePicker.insertDate('" & toDate & "', 'j_id0:j_id1:TheForm:j_id104:j_id108:j_id125:j_id128',false);" in document 1
+			do JavaScript "DatePicker.insertDate('" & fromDate & "', '" & fromDateField of theFormFields & "',true);" in document 1
+			do JavaScript "DatePicker.insertDate('" & toDate & "', '" & toDateField of theFormFields & "',false);" in document 1
 			
 			delay 3
 			
 			-- Handling text selectors!  Choose the appropriate value for the 'activity'
-			set theElement to "document.forms['j_id0:j_id1:TheForm']['j_id0:j_id1:TheForm:j_id104:j_id108:j_id130:ActivityList']"
+			set theElement to "document.forms['" & theFormName of theFormFields & "']['" & activityListField of theFormFields & "']"
 			set textToFind to activity
-			do JavaScript "var objSelect = " & theElement & ";setSelectedValue(objSelect, '" & textToFind & "');
-function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj.options.length; i++) { if (selectObj.options[i].text== valueToSet) { selectObj.options[i].selected = true; return; } }}" in document 1
+			
+			log theElement
+			log activity
+			
+			-- as a default position, select the first option
+			do JavaScript theElement & ".options[1].selected = true;" in document 1
+			
+			do JavaScript "var objSelect = " & theElement & ";setSelectedValue(objSelect, '" & textToFind & "');function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj.options.length; i++) { if (selectObj.options[i].text== valueToSet) { selectObj.options[i].selected = true; return; } }}" in document 1
+			
+			-- Had to add this next line as it is new on the web form, linked to an onChange event for the select box.  Without it, the various Add section buttons do not appear
+			
+			do JavaScript "A4J.AJAX.Submit('j_id0:j_id1:TheForm',event,{'similarityGroupingId':'j_id0:j_id1:TheForm:j_id80:j_id84:j_id106:j_id109','containerId':'j_id0:j_id1:TheForm:j_id80:j_id84:j_id106:j_id108','parameters':{'j_id0:j_id1:TheForm:j_id80:j_id84:j_id106:j_id109':'j_id0:j_id1:TheForm:j_id80:j_id84:j_id106:j_id109'} } )" in document 1
+			
 			
 			--Add reason for travel
-			do JavaScript "document.forms['j_id0:j_id1:TheForm']['j_id0:j_id1:TheForm:j_id104:j_id108:j_id138:j_id140'].value = '" & reason & "';" in document 1
+			do JavaScript "document.forms['" & theFormName of theFormFields & "']['" & reasonField of theFormFields & "'].value = '" & reason & "';" in document 1
 			
 			-- Tick the baggage box if needed
 			if flightBaggage is true then
-				do JavaScript "document.forms['j_id0:j_id1:TheForm']['j_id0:j_id1:TheForm:j_id104:j_id141:j_id142:0:j_id143'].checked = true;" in document 1
+				do JavaScript "document.forms['" & theFormName of theFormFields & "']['" & flightBaggageField of theFormFields & "'].checked = true;" in document 1
 			end if
 			
-			
+			delay 2
 			
 			-- Next section adds in the main sub-sections of the form - flights, hotels, trains, taxi, car hire and another traveller.
 			
@@ -127,52 +151,59 @@ function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj
 				delay 2
 				
 				-- Handling text selectors! Departure Airport
-				set theElement to "document.forms['j_id0:j_id1:TheForm']['j_id0:j_id1:TheForm:j_id104:j_id150:0:j_id170']"
+				--do JavaScript (setSelectors(depAirportField of theFormFields, depAirport) in document 1)
+				
+				set theElement to "document.forms['" & theFormName of theFormFields & "']['" & depAirportField of theFormFields & "']"
 				set textToFind to depAirport
+				do JavaScript "var objSelect = " & theElement & ";setSelectedValue(objSelect, '" & textToFind & "');
+				function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj.options.length; i++) { if (selectObj.options[i].text== valueToSet) { selectObj.options[i].selected = true; return; } }}" in document 1
+				
+				
+				
+				-- Handling text selectors! Destination Airport
+				set theElement to "document.forms['" & theFormName of theFormFields & "']['" & destAirportField of theFormFields & "']"
+				set textToFind to destAirport
 				do JavaScript "var objSelect = " & theElement & ";setSelectedValue(objSelect, '" & textToFind & "');
 function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj.options.length; i++) { if (selectObj.options[i].text== valueToSet) { selectObj.options[i].selected = true; return; } }}" in document 1
 				
-				-- Destination Airport
-				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id150:0:j_id172"
-				set textToFind to destAirport
-				do JavaScript "var objSelect = document.forms['j_id0:j_id1:TheForm']['" & theElement & "'];setSelectedValue(objSelect, '" & textToFind & "');
-function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj.options.length; i++) { if (selectObj.options[i].text== valueToSet) { selectObj.options[i].selected = true; return; } }}" in document 1
+				
 				
 				
 				-- Departure time
-				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id150:0:j_id176"
+				set theElement to "document.forms['" & theFormName of theFormFields & "']['" & departureTimeField of theFormFields & "']"
 				set textToFind to depTime
-				do JavaScript "var objSelect = document.forms['j_id0:j_id1:TheForm']['" & theElement & "'];setSelectedValue(objSelect, '" & textToFind & "');
+				do JavaScript "var objSelect = " & theElement & ";setSelectedValue(objSelect, '" & textToFind & "');
 function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj.options.length; i++) { if (selectObj.options[i].text== valueToSet) { selectObj.options[i].selected = true; return; } }}" in document 1
 				
 				-- Requisition Notes
-				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id150:0:j_id189"
+				set theElement to reqNotesField of theFormFields
 				do JavaScript "document.getElementById('" & theElement & "').value='" & airNotes & "';" in document 1
 				
 				-- Only execute this if we need a return flight			
 				if returnFlight is true then
 					
 					-- Return airport
-					set theElement to "j_id0:j_id1:TheForm:j_id104:j_id150:0:j_id181"
+					set theElement to "document.forms['" & theFormName of theFormFields & "']['" & retAirportField of theFormFields & "']"
 					set textToFind to retAirport
-					do JavaScript "var objSelect = document.forms['j_id0:j_id1:TheForm']['" & theElement & "'];setSelectedValue(objSelect, '" & textToFind & "');
+					do JavaScript "var objSelect = " & theElement & ";setSelectedValue(objSelect, '" & textToFind & "');
 function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj.options.length; i++) { if (selectObj.options[i].text== valueToSet) { selectObj.options[i].selected = true; return; } }}" in document 1
 					
 					-- Return date	 (use same toDate as the main form - can't think why you wouldn't want to?)
-					set theElement to "j_id0:j_id1:TheForm:j_id104:j_id150:0:j_id183"
+					set theElement to returnDateField of theFormFields
 					do JavaScript "DatePicker.insertDate('" & toDate & "', '" & theElement & "',false);" in document 1
 					
 					-- Return time
-					set theElement to "j_id0:j_id1:TheForm:j_id104:j_id150:0:j_id185"
+					set theElement to "document.forms['" & theFormName of theFormFields & "']['" & returnTimeField of theFormFields & "']"
+					
 					set textToFind to retTime
-					do JavaScript "var objSelect = document.forms['j_id0:j_id1:TheForm']['" & theElement & "'];setSelectedValue(objSelect, '" & textToFind & "');
+					do JavaScript "var objSelect = " & theElement & ";setSelectedValue(objSelect, '" & textToFind & "');
 function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj.options.length; i++) { if (selectObj.options[i].text== valueToSet) { selectObj.options[i].selected = true; return; } }}" in document 1
 					
 					
 					
 					-- Single leg - no return?
 				else
-					set radio1 to "j_id0:j_id1:TheForm:j_id104:j_id150:0:j_id164:0"
+					set radio1 to returnFlightBoolField of theFormFields
 					do JavaScript "document.getElementById('" & radio1 & "').click();" in document 1
 				end if
 			end if
@@ -184,15 +215,15 @@ function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj
 				delay 2
 				
 				-- set the check out date to the toDate!!
-				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id194:0:j_id210"
+				set theElement to hotelCheckoutField of theFormFields
 				do JavaScript "DatePicker.insertDate('" & toDate & "', '" & theElement & "',false);" in document 1
 				
 				-- set hotel pref
-				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id194:0:j_id213"
+				set theElement to hotelPrefField of theFormFields
 				do JavaScript "document.getElementById('" & theElement & "').value='" & hotelPref & "';" in document 1
 				
 				-- set hotel notes
-				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id194:0:j_id216"
+				set theElement to hotelReqNotesField of theFormFields
 				do JavaScript "document.getElementById('" & theElement & "').value='" & hotelNotes & "';" in document 1
 				
 				
@@ -206,43 +237,48 @@ function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj
 				
 				-- Common to both singles and returns
 				-- departure station
-				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id221:0:j_id241"
+				set theElement to depTrainStationField of theFormFields
 				do JavaScript "document.getElementById('" & theElement & "').value='" & depStation & "';" in document 1
 				
 				
 				-- destination station
-				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id221:0:j_id250"
+				set theElement to retTrainStationField of theFormFields
 				do JavaScript "document.getElementById('" & theElement & "').value='" & destStation & "';" in document 1
 				
 				-- Train notes
-				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id221:0:j_id263"
+				set theElement to trainReqNotesField of theFormFields
 				do JavaScript "document.getElementById('" & theElement & "').value='" & trainNotes & "';" in document 1
 				
 				-- Departure time
-				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id221:0:j_id245"
+				
+				set theElement to "document.forms['" & theFormName of theFormFields & "']['" & depTrainTimeField of theFormFields & "']"
+				
 				set textToFind to depTrainTime
-				do JavaScript "var objSelect = document.forms['j_id0:j_id1:TheForm']['" & theElement & "'];setSelectedValue(objSelect, '" & textToFind & "');
+				do JavaScript "var objSelect = " & theElement & ";setSelectedValue(objSelect, '" & textToFind & "');
 function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj.options.length; i++) { if (selectObj.options[i].text== valueToSet) { selectObj.options[i].selected = true; return; } }}" in document 1
+				
+				
+				
 				
 				-- Only if single leg option
 				if returnTrain is false then
-					set radio1 to "j_id0:j_id1:TheForm:j_id104:j_id221:0:j_id235:0"
+					set radio1 to returnTrainBoolField of theFormFields
 					do JavaScript "document.getElementById('" & radio1 & "').click();" in document 1
 					
 					-- Only execute if we need a return leg
 				else
 					
 					-- set the return date to the toDate!!
-					set theElement to "j_id0:j_id1:TheForm:j_id104:j_id221:0:j_id254"
+					set theElement to retTrainDateField of theFormFields
 					do JavaScript "DatePicker.insertDate('" & toDate & "', '" & theElement & "',false);" in document 1
 					
 					
 					-- Return time
-					set theElement to "j_id0:j_id1:TheForm:j_id104:j_id221:0:j_id258"
-					set textToFind to retTrainTime
-					do JavaScript "var objSelect = document.forms['j_id0:j_id1:TheForm']['" & theElement & "'];setSelectedValue(objSelect, '" & textToFind & "');
-function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj.options.length; i++) { if (selectObj.options[i].text== valueToSet) { selectObj.options[i].selected = true; return; } }}" in document 1
+					set theElement to "document.forms['" & theFormName of theFormFields & "']['" & retTrainTimeField of theFormFields & "']"
 					
+					set textToFind to retTrainTime
+					do JavaScript "var objSelect = " & theElement & ";setSelectedValue(objSelect, '" & textToFind & "');
+function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj.options.length; i++) { if (selectObj.options[i].text== valueToSet) { selectObj.options[i].selected = true; return; } }}" in document 1
 					
 				end if
 				
@@ -255,19 +291,19 @@ function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj
 				delay 2
 				
 				-- Departure address
-				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id268:0:j_id281"
+				set theElement to taxiDepAddressField of theFormFields
 				do JavaScript "document.getElementById('" & theElement & "').value='" & depAddress & "';" in document 1
 				
 				-- Destination address
-				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id268:0:j_id292"
+				set theElement to taxiDestAddressField of theFormFields
 				do JavaScript "document.getElementById('" & theElement & "').value='" & destAddress & "';" in document 1
 				
 				-- Requisition notes
-				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id268:0:j_id297"
+				set theElement to taxiReqNotesField of theFormFields
 				do JavaScript "document.getElementById('" & theElement & "').value='" & taxiNotes & "';" in document 1
 				
 				-- Departure time
-				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id268:0:j_id287"
+				set theElement to taxiDepTimeField of theFormFields
 				do JavaScript "document.getElementById('" & theElement & "').value='" & depTimeTaxi & "';" in document 1
 				
 			end if
@@ -278,19 +314,27 @@ function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj
 				delay 2
 				
 				-- set car pickup
-				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id302:0:j_id315"
-				do JavaScript "document.getElementById('" & theElement & "').value='" & carPickupLocation & "';" in document 1
+				set theElement to carPickUpAddressField of theFormFields
+				do JavaScript "document.getElementById('" & theElement & "').value='" & carPickUpAddress & "';" in document 1
 				
 				-- set car dropoff
-				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id302:0:j_id323"
-				do JavaScript "document.getElementById('" & theElement & "').value='" & carDropoffLocation & "';" in document 1
+				set theElement to carDropAddressField of theFormFields
+				do JavaScript "document.getElementById('" & theElement & "').value='" & carDropAddress & "';" in document 1
 				
 				-- set car dropoff date (use common toDate)
-				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id302:0:j_id326"
+				set theElement to carDropDateField of theFormFields
 				do JavaScript "document.getElementById('" & theElement & "').value='" & toDate & "';" in document 1
 				
+				-- set car dropoff time 
+				set theElement to carDropTimeField of theFormFields
+				do JavaScript "document.getElementById('" & theElement & "').value='" & carDropTime & "';" in document 1
+				
+				-- set car pickup time 
+				set theElement to carPickUpTimeField of theFormFields
+				do JavaScript "document.getElementById('" & theElement & "').value='" & carPickUpTime & "';" in document 1
+				
 				-- set car requisition notes
-				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id302:0:j_id331"
+				set theElement to carNotesField of theFormFields
 				do JavaScript "document.getElementById('" & theElement & "').value='" & carNotes & "';" in document 1
 				
 				
@@ -301,7 +345,7 @@ function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj
 				do JavaScript "addTraveller()" in document 1
 				delay 2
 				
-				set theElement to "j_id0:j_id1:TheForm:j_id104:j_id335:0:j_id341"
+				set theElement to otherTravellerField of theFormFields
 				do JavaScript "document.getElementById('" & theElement & "').value='" & nameOfOtherTraveller & "';" in document 1
 				
 			end if
@@ -309,7 +353,7 @@ function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj
 			
 			
 		on error
-			display notification "Ooops.  Couldn't activate the Safari window.  Make sure you have just one open. Close any Safari developer windows." with title "Ooops!" sound name "Glass"
+			display dialog "Ooops.  Couldn't activate the Safari window.  Make sure you have just one open. Close any Safari developer windows."
 			
 		end try
 		
@@ -320,13 +364,20 @@ end repeat
 -- Tell the user that we have finished now.
 
 display notification "All your Kimble Travel requests have been created. Please check them carefully and then submit them all - before you get timed out!" with title "All Done." sound name "Glass"
-say "Your Travel requests have been created."
+--say "Your Travel requests have been created."
 
 
 set csvText to null
 set listOfRequests to null
 
 return
+
+-- set the selects
+on setSelectors(thisElement, thisValueToSet)
+	return "var objSelect = document.forms['" & theFormName of theFormFields & "]['" & thisElement & "'];setSelectedValue(objSelect, '" & thisValueToSet & "');
+function setSelectedValue(selectObj, valueToSet) { for (var i = 0; i < selectObj.options.length; i++) { if (selectObj.options[i].text== valueToSet) { selectObj.options[i].selected = true; return; } }}"
+	
+end setSelectors
 
 -- Handy routine to find/replace text in a string, 'coz AppleScript doesn't have a thing for this.
 on replaceText(this_text, search_string, replacement_string)
